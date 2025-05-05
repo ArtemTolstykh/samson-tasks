@@ -9,7 +9,7 @@ function reverseStr(string $str): string
     return implode('', array_reverse(mb_str_split($str)));
 }
 
-function convertString (string $a, string $b): string // и первое слово тоже
+function convertString (string $a, string $b): string
 {
 
     $stringToArr = explode(' ', $a);
@@ -39,7 +39,7 @@ echo '<br><br>';
 
 /* ****** Задание 2 ****** */
 
-function printArr($array): void { // вспомогательная функция для вывода массива на страницу в браузере
+function printArr($array): void {
     echo '<pre>';
     print_r($array);
     echo '</pre>';
@@ -184,7 +184,6 @@ function collectSubtreeIds(array $categories, int $rootId): array
     return $result;
 }
 
-//printArr(collectSubtreeIds(getCategories(),2));
 
 function exportXml(string $filename, string $categoryCode): void
 {
