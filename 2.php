@@ -3,41 +3,56 @@
 require_once 'db_conn.php';
 
 /* ****** Задание 1 ****** */
-
 function reverseStr(string $str): string
 {
     return implode('', array_reverse(mb_str_split($str)));
 }
 
-function convertString (string $a, string $b): string
+function reverseInRange(string $str, int $start, int $end): string
 {
+    $before = mb_substr($str, 0, $start);
+    $range = mb_substr($str, $start, $end - $start + 1);
+    $after = mb_substr($str, $end + 1);
 
-    $stringToArr = explode(' ', $a);
-    $keys = array_keys($stringToArr, $b);
-    if (!isset($keys[1])) {
-        throw new InvalidArgumentException('Вторая подстрока не найдена');
+    $reverseRange = reverseStr($range);
+    return $before . $reverseRange . $after;
+
+}
+
+function convertString (string $a, string $b): string {
+    $subStrLen = mb_strlen($b);
+
+    $offset = 0;
+    $positions = [];
+    $countPos = 0;
+
+    while (($pos = mb_strpos($a, $b, $offset)) !== false) {
+        $positions[] = $pos;
+        $offset = $pos + $subStrLen;
+        $countPos++;
+
+        if ($countPos == 2) {
+            break;
+        }
     }
-    $resultStr = reverseStr($stringToArr[$keys[1]]);
-    $stringToArr[$keys[1]] = $resultStr;
-    return implode(' ', $stringToArr);
 
+    if ($countPos < 2) {
+        return $a;
+    }
+
+    $start = $positions[1];
+    $end = $start + $subStrLen - 1;
+
+    return reverseInRange($a, $start, $end);
 }
 
-$stringValue = 'замок был закрыт на замок';
-$substr = 'замок';
+$stringValue = 'OneTwoThreeOneOne';
+$substr = 'One';
 
-echo 'Результат первого задания:'.'<br>';
-echo "Исходная строка: $stringValue".'<br>';
-try {
-    echo 'Результат: ' . convertString($stringValue, $substr);
-} catch (InvalidArgumentException $e) {
-    echo $e->getMessage();
-}
+echo 'Результат 1 задания:'.'<br>';
+echo convertString($stringValue, $substr);
 
-echo '<br><br>';
-
-
-/* ****** Задание 2 ****** */
+/* ****** Задание 2 ******
 
 function printArr($array): void {
     echo '<pre>';
@@ -84,7 +99,7 @@ try {
 echo '<br><br>';
 
 
-/* ****** Задание 3 ****** */
+/* ****** Задание 3 ******
 
 function importXml(string $filename): void
 {
@@ -155,7 +170,7 @@ function importXml(string $filename): void
 //importXml('catalog.xml');
 
 
-/* ****** Задание 4 ****** */
+/* ****** Задание 4 ******
 
 function getCategories(): array
 {
@@ -290,14 +305,7 @@ function exportXml(string $filename, string $categoryCode): void
 
 //exportXml('testXMLcat2.xml', 2);
 
-
-
-
-
-
-
-
-
+*/
 
 
 
