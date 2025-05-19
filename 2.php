@@ -19,7 +19,8 @@ function reverseInRange(string $str, int $start, int $end): string
 
 }
 
-function convertString (string $a, string $b): string {
+function convertString(string $a, string $b): string
+{
     $subStrLen = mb_strlen($b);
 
     $offset = 0;
@@ -52,7 +53,9 @@ $substr = 'One';
 echo 'Результат 1 задания:'.'<br>';
 echo convertString($stringValue, $substr);
 
-/* ****** Задание 2 ******
+echo '<br><br>';
+
+/* ****** Задание 2 ****** */
 
 function printArr($array): void {
     echo '<pre>';
@@ -99,7 +102,23 @@ try {
 echo '<br><br>';
 
 
-/* ****** Задание 3 ******
+/* ****** Задание 3 ****** */
+
+function transliterate(string $str): string
+{
+    $library = [
+        'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd',
+        'е' => 'e', 'ё' => 'yo', 'ж' => 'zh', 'з' => 'z', 'и' => 'i',
+        'й' => 'y', 'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n',
+        'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't',
+        'у' => 'u', 'ф' => 'f', 'х' => 'h', 'ц' => 'ts', 'ч' => 'ch',
+        'ш' => 'sh', 'щ' => 'sch', 'ъ' => '', 'ы' => 'y', 'ь' => '',
+        'э' => 'e', 'ю' => 'ju', 'я' => 'ja'
+    ];
+
+    $result = strtr(mb_strtolower($str), $library);
+    return ucfirst($result);
+}
 
 function importXml(string $filename): void
 {
@@ -144,6 +163,7 @@ function importXml(string $filename): void
         foreach ($categories as $category) {
             if ($category instanceof DOMElement) {
                 $categoryName = $category->nodeValue;
+                $transliterateCategory = transliterate($categoryName);
 
                 $stmt = $conn->prepare("SELECT id FROM a_category WHERE name = ? AND parent_id <=> ? LIMIT 1");
                 $stmt->bind_param('si', $categoryName, $parentId);
@@ -152,8 +172,8 @@ function importXml(string $filename): void
                 $id = $stmt->get_result()->fetch_column();
 
                 if (!$id) {
-                    $stmt = $conn->prepare("INSERT INTO a_category (name, parent_id) VALUES (?, ?)");
-                    $stmt->bind_param('si', $categoryName, $parentId);
+                    $stmt = $conn->prepare("INSERT INTO a_category (name, parent_id, code) VALUES (?, ?, ?)");
+                    $stmt->bind_param('sis', $categoryName, $parentId, $transliterateCategory);
                     $stmt->execute();
                     $id = $conn->insert_id;
                 }
@@ -170,7 +190,7 @@ function importXml(string $filename): void
 //importXml('catalog.xml');
 
 
-/* ****** Задание 4 ******
+/* ****** Задание 4 ****** */
 
 function getCategories(): array
 {
@@ -303,9 +323,8 @@ function exportXml(string $filename, string $categoryCode): void
     file_put_contents($filename, $dom->saveXML());
 }
 
-//exportXml('testXMLcat2.xml', 2);
+//exportXml('testXMLcat1.xml', 1);
 
-*/
 
 
 

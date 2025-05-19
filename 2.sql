@@ -26,6 +26,7 @@ CREATE TABLE `a_category` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `parent_id` int DEFAULT NULL,
+  `code` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `parent_id` (`parent_id`),
   CONSTRAINT `a_category_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `a_category` (`id`) ON DELETE SET NULL
@@ -38,7 +39,7 @@ CREATE TABLE `a_category` (
 
 LOCK TABLES `a_category` WRITE;
 /*!40000 ALTER TABLE `a_category` DISABLE KEYS */;
-INSERT INTO `a_category` VALUES (1,'Бумага',NULL),(2,'Принтеры',NULL),(3,'МФУ',2);
+INSERT INTO `a_category` VALUES (1,'Бумага',NULL,'Bumaga'),(2,'Принтеры',NULL,'Printery'),(3,'МФУ',2,'Mfu');
 /*!40000 ALTER TABLE `a_category` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -83,7 +84,7 @@ CREATE TABLE `a_product` (
   `name` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -151,14 +152,6 @@ LOCK TABLES `a_property` WRITE;
 INSERT INTO `a_property` VALUES (1,1,'Плотность','100',NULL),(2,1,'Белизна','150','%'),(3,2,'Плотность','90',NULL),(4,2,'Белизна','100','%'),(5,3,'Формат','A4',NULL),(6,3,'Формат','A3',NULL),(7,3,'Тип','Лазерный',NULL),(8,4,'Формат','A3',NULL),(9,4,'Тип','Лазерный',NULL);
 /*!40000 ALTER TABLE `a_property` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Dumping events for database 'samson_test'
---
-
---
--- Dumping routines for database 'samson_test'
---
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -169,4 +162,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-05-05 15:45:17
+-- Dump completed on 2025-05-19 21:42:38
