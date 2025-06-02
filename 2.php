@@ -197,7 +197,7 @@ function getCategories(): array
     global $conn;
 
     $rows = [];
-    $result = $conn->query("SELECT id, name, parent_id FROM a_category");
+    $result = $conn->query("SELECT * FROM a_category");
     while ($row = $result->fetch_assoc()) $rows[] = $row;
     return $rows;
 }
@@ -219,15 +219,35 @@ function collectSubtreeIds(array $categories, int $rootId): array
     return $result;
 }
 
+function findCategoryIdByName(array $categories, string $name): ?int
+{
+    foreach ($categories as $category) {
+        if(strcasecmp($category['name'], $name) === 0) {
+            return (int)$category['id'];
+        }
+    }
+
+    return null;
+}
 
 function exportXml(string $filename, string $categoryCode): void
 {
     global $conn;
 
-    $ids = collectSubtreeIds(getCategories(), (int)$categoryCode);
+    $categories = getCategories();
+
+    if (ctype_digit($categoryCode)) {
+        $rootId = (int)$categoryCode;
+    } else {
+        $rootId = findCategoryIdByName($categories, $categoryCode);
+        if ($rootId === null) {
+            throw new InvalidArgumentException("Категория: '$categoryCode' не найдена");
+        }
+    }
+
+    $ids = collectSubtreeIds($categories, $rootId);
     $branch = implode(',', $ids);
 
-    $categories = getCategories();
     $categoryMap = [];
     foreach ($categories as $category) {
         $categoryMap[$category['id']] = $category;
@@ -245,7 +265,12 @@ function exportXml(string $filename, string $categoryCode): void
             $currentId = $parentId;
         }
 
-        $orderedAncestorIds = array_merge($orderedAncestorIds, $patch);
+        $patch = array_reverse($patch);
+
+        foreach ($patch as $id) {
+            $orderedAncestorIds[] = $id;
+        }
+
     }
 
     $orderedAncestorIds = array_values(array_unique($orderedAncestorIds));
@@ -323,7 +348,14 @@ function exportXml(string $filename, string $categoryCode): void
     file_put_contents($filename, $dom->saveXML());
 }
 
-//exportXml('testXMLcat1.xml', 1);
+$catCode = 'Бумага';
+
+try {
+    exportXml('testXMLcat1.xml', $catCode);
+} catch(\Exception $e) {
+    echo $e->getMessage();
+}
+
 
 
 
