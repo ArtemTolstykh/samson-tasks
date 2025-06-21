@@ -129,8 +129,15 @@ function importXml(string $filename): void
     $products = $dom->getElementsByTagName('Товар');
 
     foreach ($products as $product) {
-        $productCode = $product->getAttribute('Код');
+        $productCode = (int) $product->getAttribute('Код');
         $productName = $product->getAttribute('Название');
+
+        $checkUniq = $conn->query("SELECT id FROM a_product WHERE code = '$productCode'");
+
+        if ($checkUniq->fetch_column()) {
+            echo "Продукт под названием $productName с кодом $productCode уже существует в базе данных".'<br>';
+            continue;
+        }
 
         $stmt = $conn->prepare("INSERT INTO a_product (code, name) VALUES (?, ?)");
         $stmt->bind_param('is', $productCode, $productName);
@@ -222,7 +229,7 @@ function collectSubtreeIds(array $categories, int $rootId): array
 function findCategoryIdByName(array $categories, string $name): ?int
 {
     foreach ($categories as $category) {
-        if(strcasecmp($category['name'], $name) === 0) {
+        if(strcasecmp($category['name'], $name) === 0 || strcasecmp($category['code'], $name) === 0) { // fix
             return (int)$category['id'];
         }
     }
@@ -348,7 +355,7 @@ function exportXml(string $filename, string $categoryCode): void
     file_put_contents($filename, $dom->saveXML());
 }
 
-$catCode = 'Бумага';
+$catCode = 'Bumaga';
 
 try {
     exportXml('testXMLcat1.xml', $catCode);
