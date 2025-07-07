@@ -120,82 +120,201 @@ function transliterate(string $str): string
     return ucfirst($result);
 }
 
-function importXml(string $filename): void
+function getProductId(string $code): ?int
 {
     global $conn;
+    static $stmt = null;
+
+    if ($stmt === null) {
+        $stmt = $conn->prepare("SELECT id FROM a_product WHERE code = ?");
+    }
+
+    $stmt->bind_param("s", $code);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_assoc()['id'] ?? false;
+}
+
+
+function updateProduct(int $productId, string $code, string $name, DOMElement $product): void
+{
+    global $conn;
+    static $updateStmt = null, $deletePriceStmt = null, $deletePropStmt = null, $deleteCatStmt = null;
+
+    if ($updateStmt === null) {
+        $updateStmt = $conn->prepare("UPDATE a_product SET name = ? WHERE code = ?");
+        $deletePriceStmt = $conn->prepare("DELETE FROM a_price WHERE product_id = ?");
+        $deletePropStmt = $conn->prepare("DELETE FROM a_property WHERE product_id = ?");
+        $deleteCatStmt = $conn->prepare("DELETE FROM a_product_category WHERE product_id = ?");
+    }
+
+    $updateStmt->bind_param("si", $name, $productId);
+    $updateStmt->execute();
+
+    $deletePriceStmt->bind_param("i", $productId);
+    $deletePriceStmt->execute();
+
+    $deletePropStmt->bind_param("i", $productId);
+    $deletePropStmt->execute();
+
+    $deleteCatStmt->bind_param("i", $productId);
+    $deleteCatStmt->execute();
+
+    insertProductData($productId, $product);
+    echo "Продукт $name с кодом $code обновлен".'<br>';
+}
+
+function insertProduct(string $code, string $name, DOMElement $product): void
+{
+    global $conn;
+    static $stmt = null;
+
+    if ($stmt === null) {
+        $stmt = $conn->prepare("INSERT INTO a_product (code, name) VALUES (?, ?)");
+    }
+
+    $stmt->bind_param("ss", $code, $name);
+    $stmt->execute();
+
+    $productId = $conn->insert_id;
+
+    insertProductData($productId, $product);
+    echo "Продукт $name с кодом $code добавлен".'<br>';
+}
+
+function insertProductData(int $productId, DOMElement $product): void
+{
+    global $conn;
+    static $priceStmt = null, $propStmt = null, $findCatStmt = null, $insertCatStmt = null, $productCatStmt = null;
+
+    //Обработка цен
+
+    $priceElements = $product->getElementsByTagName('Цена');
+
+    if ($priceStmt === null) {
+        $priceStmt = $conn->prepare("INSERT INTO a_price (product_id, price_type, price) VALUES (?, ?, ?)");
+    }
+
+    foreach ($priceElements as $priceElement) {
+        $priceType = $priceElement->getAttribute('Тип');
+        $priceValue = (float)$priceElement->nodeValue;
+
+        $priceStmt->bind_param('ssd', $productId, $priceType, $priceValue);
+        if (!$priceStmt->execute()) {
+            error_log("Ошибка вставки цены: " . $priceStmt->error);
+        }
+    }
+
+    //Обработка свойств
+
+    $properties = $product->getElementsByTagName('Свойства')->item(0)->childNodes;
+
+    if ($propStmt === null) {
+        $propStmt = $conn->prepare("INSERT INTO a_property (product_id, property_name, property_value, unit_measurement) VALUES (?, ?, ?, ?)");
+    }
+
+    foreach ($properties as $property) {
+        if ($property instanceof DOMElement) {
+            $propertyName = $property->nodeName;
+            $propertyValue = $property->nodeValue;
+            $unitMeasurement = $property->hasAttribute('ЕдИзм') ? $property->getAttribute('ЕдИзм') : null;
+            $propStmt->bind_param('isss', $productId, $propertyName, $propertyValue, $unitMeasurement);
+            $propStmt->execute();
+        }
+    }
+
+    //Обработка категорий
+
+    $categories = $product->getElementsByTagName('Разделы')->item(0)->childNodes;
+
+    if ($findCatStmt === null) {
+        $findCatStmt = $conn->prepare("SELECT id FROM a_category WHERE name = ? AND parent_id <=> ? LIMIT 1");
+        $insertCatStmt = $conn->prepare("INSERT INTO a_category (name, parent_id, code) VALUES (?, ?, ?)");
+        $productCatStmt = $conn->prepare("INSERT INTO a_product_category (product_id, category_id) VALUES (?, ?)");
+    }
+
+    $parentId = null;
+    foreach ($categories as $category) {
+        if ($category instanceof DOMElement) {
+            $categoryName = $category->nodeValue;
+            $transliterateCategory = transliterate($categoryName);
+
+            $findCatStmt->bind_param('si', $categoryName, $parentId);
+            $findCatStmt->execute();
+
+            $categoryId = $findCatStmt->get_result()->fetch_column();
+
+            if (!$categoryId) {
+                $insertCatStmt->bind_param('sis', $categoryName, $parentId, $transliterateCategory);
+                $insertCatStmt->execute();
+                $categoryId = $conn->insert_id;
+            }
+            $parentId = (int)$categoryId;
+        }
+    }
+
+    if ($productId && $parentId) {
+        $productCatStmt->bind_param('ii', $productId, $parentId);
+        $productCatStmt->execute();
+    }
+}
+
+function deleteMissingProduct(array $existingCodes): void
+{
+    global $conn;
+    static $deleteStmt = null;
+
+    $existingCodesCount = count($existingCodes);
+
+    if (empty($existingCodes)) {
+        $result = $conn->query("SELECT code FROM a_product");
+    } else {
+        $placeholders = implode(',', array_fill(0, $existingCodesCount, '?'));
+        $types = str_repeat('s', $existingCodesCount);
+
+        $stmt = $conn->prepare("SELECT code FROM a_product WHERE code NOT IN ($placeholders)");
+        $stmt->bind_param($types, ...$existingCodes);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    }
+
+    if ($deleteStmt === null) {
+        $deleteStmt = $conn->prepare("DELETE FROM a_product WHERE code = ?");
+    }
+
+    while ($row = $result->fetch_assoc()) {
+        $code = $row["code"];
+        $deleteStmt->bind_param("s", $code);
+        $deleteStmt->execute();
+
+        echo "Товар с кодом $code удален" . '<br>';
+    }
+}
+
+function importXml(string $filename): void
+{
     $dom = new DOMDocument();
     $dom->load($filename);
 
     $products = $dom->getElementsByTagName('Товар');
+    $existingCodes = [];
 
     foreach ($products as $product) {
-        $productCode = (int) $product->getAttribute('Код');
+        $productCode = (int)$product->getAttribute('Код');
         $productName = $product->getAttribute('Название');
+        $existingCodes[] = $productCode;
 
-        $checkUniq = $conn->query("SELECT id FROM a_product WHERE code = '$productCode'");
-
-        if ($checkUniq->fetch_column()) {
-            echo "Продукт под названием $productName с кодом $productCode уже существует в базе данных".'<br>';
-            continue;
+        if ($productId = getProductId($productCode)) {
+            updateProduct($productId, $productCode, $productName, $product);
+        } else {
+            insertProduct($productCode, $productName, $product);
         }
-
-        $stmt = $conn->prepare("INSERT INTO a_product (code, name) VALUES (?, ?)");
-        $stmt->bind_param('is', $productCode, $productName);
-        $stmt->execute();
-        $productId = $conn->insert_id;
-
-        $prices = $product->getElementsByTagName('Цена');
-        foreach ($prices as $price) {
-            $priceType = $price->getAttribute('Тип');
-            $priceValue = $price->nodeValue;
-            $stmt = $conn->prepare("INSERT INTO a_price (product_id, price_type, price) VALUES (?, ?, ?)");
-            $stmt->bind_param('isd', $productId, $priceType, $priceValue);
-            $stmt->execute();
-        }
-
-        $properties = $product->getElementsByTagName('Свойства')->item(0)->childNodes;
-        foreach ($properties as $property) {
-            if ($property instanceof DOMElement) {
-                $propertyName = $property->nodeName;
-                $propertyValue = $property->nodeValue;
-                $unitMeasurement = $property->hasAttribute('ЕдИзм') ? $property->getAttribute('ЕдИзм') : null;
-                $stmt = $conn->prepare("INSERT INTO a_property (product_id, property_name, property_value, unit_measurement) VALUES (?, ?, ?, ?)");
-                $stmt->bind_param('isss', $productId, $propertyName, $propertyValue, $unitMeasurement);
-                $stmt->execute();
-            }
-        }
-
-        $categories = $product->getElementsByTagName('Разделы')->item(0)->childNodes;
-        $parentId = null;
-        foreach ($categories as $category) {
-            if ($category instanceof DOMElement) {
-                $categoryName = $category->nodeValue;
-                $transliterateCategory = transliterate($categoryName);
-
-                $stmt = $conn->prepare("SELECT id FROM a_category WHERE name = ? AND parent_id <=> ? LIMIT 1");
-                $stmt->bind_param('si', $categoryName, $parentId);
-                $stmt->execute();
-
-                $id = $stmt->get_result()->fetch_column();
-
-                if (!$id) {
-                    $stmt = $conn->prepare("INSERT INTO a_category (name, parent_id, code) VALUES (?, ?, ?)");
-                    $stmt->bind_param('sis', $categoryName, $parentId, $transliterateCategory);
-                    $stmt->execute();
-                    $id = $conn->insert_id;
-                }
-                $parentId = (int)$id;
-            }
-        }
-
-        $stmt = $conn->prepare("INSERT INTO a_product_category (product_id, category_id) VALUES (?, ?)");
-        $stmt->bind_param('ii', $productId, $parentId);
-        $stmt->execute();
     }
+
+    deleteMissingProduct($existingCodes);
 }
 
 //importXml('catalog.xml');
-
 
 /* ****** Задание 4 ****** */
 
@@ -229,7 +348,7 @@ function collectSubtreeIds(array $categories, int $rootId): array
 function findCategoryIdByName(array $categories, string $name): ?int
 {
     foreach ($categories as $category) {
-        if(strcasecmp($category['name'], $name) === 0 || strcasecmp($category['code'], $name) === 0) { // fix
+        if(strcasecmp($category['name'], $name) === 0 || strcasecmp($category['code'], $name) === 0) {
             return (int)$category['id'];
         }
     }
@@ -358,7 +477,7 @@ function exportXml(string $filename, string $categoryCode): void
 $catCode = 'Bumaga';
 
 try {
-    exportXml('testXMLcat1.xml', $catCode);
+   exportXml('testXMLcat1.xml', $catCode);
 } catch(\Exception $e) {
     echo $e->getMessage();
 }
