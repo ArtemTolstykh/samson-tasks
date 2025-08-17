@@ -1,8 +1,13 @@
 <?php
 
-$user = 'root';
-$pass = 'root';
-$db = 'samson_test';
+//$user = 'root';
+//$pass = 'root';
+//$db = 'samson_test';
+//$host = 'localhost';
+
+$user = 'user';
+$pass = 'pass';
+$db = 'myapp';
 $host = 'localhost';
 
 $conn = new mysqli($host, $user, $pass, $db);
