@@ -57,4 +57,11 @@ $APPLICATION->SetTitle("test");
 		"SORT_ORDER2" => "ASC",
 		"STRICT_SECTION_CHECK" => "N"
 	)
+);?><?$APPLICATION->IncludeComponent(
+	"bitrix:search.form",
+	"head",
+	Array(
+		"PAGE" => "#SITE_DIR#search/index.php",
+		"USE_SUGGEST" => "N"
+	)
 );?><?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>
