@@ -1,7 +1,6 @@
 <?
-$sSectionName = "Акции,";
+$sSectionName = "Условия сотрудничества";
 $arDirProperties = Array(
-   "title" => "Акции",
-   "keywords_inner" => "Акции, акции на мебель"
+
 );
 ?>
