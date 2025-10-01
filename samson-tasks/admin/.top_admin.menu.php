@@ -1,4 +1,4 @@
-<?
+<?php
 $aMenuLinks = Array(
 	Array(
 		"", 
@@ -22,4 +22,3 @@ $aMenuLinks = Array(
 		"" 
 	)
 );
-?>

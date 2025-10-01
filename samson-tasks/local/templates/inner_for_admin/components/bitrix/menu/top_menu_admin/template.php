@@ -6,7 +6,7 @@
 <?php
 $previousLevel = 0;
 foreach($arResult as $arItem):?>
-<?php if ($previousLevel && $arItem['DEPTH_LEVEL'] > $previousLevel):?>
+<?php if ($previousLevel && $arItem['DEPTH_LEVEL'] < $previousLevel): //Исправил?>
     <?=str_repeat('</ul></li>', ($previousLevel - $arItem['DEPTH_LEVEL']));?>
 <?php endif;?>
 
