@@ -1,5 +1,13 @@
 <?php
 $arUrlRewrite=array (
+  3 => 
+  array (
+    'CONDITION' => '#^/admin/users/([^/]+)/?$#',
+    'RULE' => 'LOGIN=$1',
+    'ID' => '',
+    'PATH' => '/admin/users/detail.php',
+    'SORT' => 100,
+  ),
   0 => 
   array (
     'CONDITION' => '#^/services/#',

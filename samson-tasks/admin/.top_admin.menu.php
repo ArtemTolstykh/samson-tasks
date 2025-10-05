@@ -1,4 +1,4 @@
-<?php
+<?
 $aMenuLinks = Array(
 	Array(
 		"", 
@@ -15,10 +15,11 @@ $aMenuLinks = Array(
 		"" 
 	),
 	Array(
-		"test admin", 
-		"/admin/test-admin.php", 
+		"Пользователи",
+		"/admin/users/", 
 		Array(), 
 		Array(), 
 		"" 
 	)
 );
+?>
