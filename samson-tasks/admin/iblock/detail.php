@@ -16,7 +16,8 @@ $APPLICATION->IncludeComponent(
 		"SET_TITLE" => "Y",
 		"ADD_CHAIN_ITEM" => "N",
 		"COMPONENT_TEMPLATE" => ".default",
-		"CACHE_TYPE" => "A"
+		"CACHE_TYPE" => "A",
+		"SET_STOP_WORDS" => "это для или если когда такой такая такие также после перед через между над под всегда данный этот этом эти этим этой того чтобы более менее свой ваш"
 	),
 	false
 );

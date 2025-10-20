@@ -1,6 +1,8 @@
-<?php if(!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED!==true) die();
+<?php
 
-$F = $arResult['FILTER'];
+if(!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED!==true) die();
+
+$filter = $arResult['FILTER'];
 
 ?>
 
@@ -12,15 +14,15 @@ $F = $arResult['FILTER'];
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
             <div>
                 <label>Email (подстрока)</label><br>
-                <input type="text" name="EMAIL" value="<?=html($F['EMAIL'])?>" style="padding:6px 8px;min-width:220px;">
+                <input type="text" name="EMAIL" value="<?=html($filter['EMAIL'])?>" style="padding:6px 8px;min-width:220px;">
             </div>
             <div>
                 <label>Последняя авторизация с</label><br>
-                <input type="date" name="LAST_LOGIN_FROM" value="<?=html($F['LAST_LOGIN_FROM'])?>" style="padding:6px 8px;">
+                <input type="date" name="LAST_LOGIN_FROM" value="<?=html($filter['LAST_LOGIN_FROM'])?>" style="padding:6px 8px;">
             </div>
             <div>
                 <label>по</label><br>
-                <input type="date" name="LAST_LOGIN_TO" value="<?=html($F['LAST_LOGIN_TO'])?>" style="padding:6px 8px;">
+                <input type="date" name="LAST_LOGIN_TO" value="<?=html($filter['LAST_LOGIN_TO'])?>" style="padding:6px 8px;">
             </div>
             <div>
                 <button type="submit" style="padding:8px 14px;">Применить</button>
@@ -45,19 +47,19 @@ $F = $arResult['FILTER'];
             <tbody>
             <?php if(empty($arResult['ITEMS'])): ?>
                 <tr><td colspan="7" style="padding:12px;">Ничего не найдено</td></tr>
-            <?php else: foreach($arResult['ITEMS'] as $u):
-                $fio = trim($u['LAST_NAME'].' '.$u['NAME'].' '.$u['SECOND_NAME']);
+            <?php else: foreach($arResult['ITEMS'] as $user):
+                $fio = trim($user['LAST_NAME'].' '.$user['NAME'].' '.$user['SECOND_NAME']);
                 ?>
                 <tr>
-                    <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?= (int)$u['ID'] ?></td>
+                    <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?= (int)$user['ID'] ?></td>
                     <td style="border-bottom:1px solid #f0f0f0;padding:8px;">
-                        <a href="<?=html($u['DETAIL_URL'])?>"><?=html($u['LOGIN'])?></a>
+                        <a href="<?=html($user['DETAIL_URL'])?>"><?=html($user['LOGIN'])?></a>
                     </td>
                     <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?=html($fio)?></td>
-                    <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?=html($u['EMAIL'])?></td>
-                    <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?= ($u['ACTIVE']==='Y'?'Да':'Нет') ?></td>
-                    <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?=html($u['DATE_REGISTER'])?></td>
-                    <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?=html($u['LAST_LOGIN'])?></td>
+                    <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?=html($user['EMAIL'])?></td>
+                    <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?= ($user['ACTIVE']==='Y'?'Да':'Нет') ?></td>
+                    <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?=html($user['DATE_REGISTER'])?></td>
+                    <td style="border-bottom:1px solid #f0f0f0;padding:8px;"><?=html($user['LAST_LOGIN'])?></td>
                 </tr>
             <?php endforeach; endif; ?>
             </tbody>

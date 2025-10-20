@@ -9,6 +9,9 @@ $arComponentParameters = [
         'ELEMENT_ID' => [
             'PARENT'=>'BASE','NAME'=>'ID элемента','TYPE'=>'STRING'
         ],
+        'SET_STOP_WORDS' => [
+            'PARENT'=>'ADDITIONAL_SETTINGS', 'NAME'=>'Набор стоп слов (разделитель: пробел)', 'TYPE'=>'STRING', 'DEFAULT' => ''
+        ],
         'SIMILAR_LIMIT' => [
             'PARENT'=>'ADDITIONAL_SETTINGS','NAME'=>'Лимит похожих','TYPE'=>'STRING','DEFAULT'=>'5'
         ],
